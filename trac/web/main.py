@@ -354,8 +354,14 @@ class RequestDispatcher(Component):
         else:
             req.outcookie['trac_form_token'] = hex_entropy(24)
             req.outcookie['trac_form_token']['path'] = req.base_path or '/'
-            if self.env.secure_cookies:
-                req.outcookie['trac_form_token']['secure'] = True
+            # Do not secure this cookie, as that would prevent any anonymous user from
+            # posting any form. Actually, I think storing the "strong shared secret" in
+            # a cookie does *not* help against CSRFs, as those are explicitly rely on
+            # the browser sending along cookies for the target domain (so the trac_form_token
+            # cookie would be sent along with the trac_auth cookie and the attack would
+            # still pass).
+            #if self.env.secure_cookies:
+            #    req.outcookie['trac_form_token']['secure'] = True
             if sys.version_info >= (2, 6):
                 req.outcookie['trac_form_token']['httponly'] = True
             return req.outcookie['trac_form_token'].value
