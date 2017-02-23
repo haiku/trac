@@ -119,17 +119,10 @@ class NotifyEmail(Notify):
         config = self.config['notification']
         if not config.getbool('smtp_enabled'):
             return
-        from_email, from_name = '', ''
+        from_email = config.get('smtp_from')
         if author and config.getbool('smtp_from_author'):
-            from_email = self.get_smtp_address(author)
-            if from_email:
-                from_name = self.name_map.get(author, '')
-                if not from_name:
-                    mo = self.longaddr_re.search(author)
-                    if mo:
-                        from_name = mo.group(1)
-        if not from_email:
-            from_email = config.get('smtp_from')
+            from_name = author
+        else:
             from_name = config.get('smtp_from_name') or self.env.project_name
         self.replyto_email = config.get('smtp_replyto')
         self.from_email = from_email or self.replyto_email
