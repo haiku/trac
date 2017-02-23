@@ -639,6 +639,10 @@ class Mimeview(Component):
         (":"). (''since 1.0'')
         """)
 
+    preview_limit_map = ListOption('mimeviewer', 'preview_limit_map',
+        'text/x-diff:262144,text/x-rst:262144',
+        doc="""List of specific preview limits per MIME type. (''local extension'')""")
+
     treat_as_binary = ListOption('mimeviewer', 'treat_as_binary',
         'application/octet-stream, application/pdf, application/postscript, '
         'application/msword, application/rtf',
@@ -649,6 +653,7 @@ class Mimeview(Component):
     def __init__(self):
         self._mime_map = None
         self._mime_map_patterns = None
+        self._preview_limit_map = None
 
     # Public API
 
@@ -917,6 +922,17 @@ class Mimeview(Component):
                         self._mime_map[keyword] = assocations[0]
         return self._mime_map
 
+    @property
+    def preview_limit_map(self):
+        # fill preview limit map from configuration
+        if not self._preview_limit_map:
+            self._preview_limit_map = {}
+            for mapping in self.config['mimeviewer'].getlist('preview_limit_map'):
+                if ':' in mapping:
+                    values = mapping.split(':')
+                    self._preview_limit_map[values[0]] = int(values[1])
+        return self._preview_limit_map
+
     def get_mimetype(self, filename, content=None):
         """Infer the MIME type from the `filename` or the `content`.
 
@@ -999,7 +1015,10 @@ class Mimeview(Component):
                 'max_file_size_reached': False,
                 'rendered': None,
                 }
-        if length >= self.max_preview_size:
+        preview_limit = self.preview_limit_map.get(ct_mimetype(mimetype), 
+                                                   self.max_preview_size)
+        if length >= preview_limit:
+            data['max_file_size'] = preview_limit
             data['max_file_size_reached'] = True
         else:
             result = self.render(context, mimetype, content, filename, url,
