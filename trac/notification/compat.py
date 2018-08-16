@@ -211,8 +211,14 @@ class NotifyEmail(Notify):
         notify_sys = NotificationSystem(self.env)
         toaddrs = build_addresses(torcpts)
         ccaddrs = build_addresses(ccrcpts)
-        accaddrs = notify_sys.smtp_always_cc_list
-        bccaddrs = notify_sys.smtp_always_bcc_list
+        # HACK: workaround the fact that the accountmanager still uses this component to
+        # send emails. This causes all password resets to be sent to the CC list
+        # Since the wiki and ticket components use the new notification system, they are
+        # not affected by commenting out these lines
+        #accaddrs = notify_sys.smtp_always_cc_list
+        accaddrs = []
+        #bccaddrs = notify_sys.smtp_always_bcc_list
+        bccaddrs = []
 
         recipients = []
         toaddrs, recipients = remove_dup(toaddrs, recipients)
