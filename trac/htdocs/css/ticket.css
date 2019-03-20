@@ -304,7 +304,7 @@ label[for=comment] { float: right }
 #properties table.trac-properties > tbody > tr > td.fullrow { width: 83% }
 #properties table.trac-properties > tbody > tr > td.col1 > label,
 #properties table.trac-properties > tbody > tr > td.col2 > label { float: left; margin-right: 0.5em; }
-#properties table.trac-properties > tbody > tr > td > select { max-width: 100% }
+#properties table.trac-properties > tbody > tr > td > select { max-width: 100%; display: block; }
 #properties table.trac-properties > tbody > tr > td > span.hint { padding-left: 0 }
 
 #action { line-height: 2em }
