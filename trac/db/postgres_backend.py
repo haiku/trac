@@ -32,6 +32,14 @@ from trac.util.html import Markup
 from trac.util.text import empty, exception_to_unicode, to_unicode
 from trac.util.translation import _
 
+# Attempt to use psycopg2cffi in compatibility mode if available
+# this enables usage of psycopg2cffi under pypy
+try:
+    from psycopg2cffi import compat
+    compat.register()
+except ImportError:
+    pass
+
 try:
     import psycopg2 as psycopg
     import psycopg2.extensions
