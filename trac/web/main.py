@@ -102,7 +102,11 @@ class RequestWithSession(Request):
     """A request that saves its associated session when sending the reply."""
 
     def send_response(self, code=200):
-        if code < 400:
+        # Only save the session if it has actually been used. This avoids
+        # loading a session from the database for requests that never access
+        # it, such as static resources. Accessing ``req.session`` caches the
+        # value as an instance attribute (see `Request.__getattr__`).
+        if code < 400 and 'session' in self.__dict__:
             self.session.save()
         super().send_response(code)
 

@@ -161,6 +161,11 @@ class DetachedSession(SessionDict):
             # The session for anonymous doesn't have associated data,
             # so there's no need to persist it
             return
+        if not self._new and self._old == self:
+            # Nothing has changed, so avoid starting a transaction only to
+            # commit an empty unit of work. This is the common case for
+            # authenticated users on every request.
+            return
 
         # We can't do the session management in one big transaction,
         # as the intertwined changes to both the session and
