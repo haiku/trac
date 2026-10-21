@@ -479,6 +479,11 @@ class RequestDispatcher(Component):
 
 _slashes_re = re.compile(r'/+')
 
+# Number of requests between explicit full garbage collections. Python's
+# cyclic GC already reclaims request garbage automatically; this is only a
+# safety net for cycles created by plugins (see #6614).
+_GC_COLLECT_INTERVAL = 100
+
 def dispatch_request(environ, start_response):
     """Main entry point for the Trac web interface.
 
@@ -624,20 +629,18 @@ def dispatch_request(environ, start_response):
         translation.deactivate()
         if env and not run_once:
             env.shutdown(get_thread_id())
-            # Now it's a good time to do some clean-ups
-            #
-            # Note: enable the '##' lines as soon as there's a suspicion
-            #       of memory leak due to uncollectable objects (typically
-            #       objects with a __del__ method caught in a cycle)
-            #
-            ##gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
-            unreachable = gc.collect()
-            ##env.log.debug("%d unreachable objects found.", unreachable)
-            ##uncollectable = len(gc.garbage)
-            ##if uncollectable:
-            ##    del gc.garbage[:]
-            ##    env.log.warning("%d uncollectable objects found.",
-            ##                    uncollectable)
+            # Python's cyclic garbage collector already reclaims request
+            # garbage. Forcing a full collection after every request is
+            # very expensive (it traverses the whole heap), so only do it
+            # periodically as a safety net for cycles created by plugins.
+            count = getattr(env, '_gc_request_count', 0) + 1
+            env._gc_request_count = count
+            if count >= _GC_COLLECT_INTERVAL:
+                env._gc_request_count = 0
+                # Note: enable gc.set_debug(gc.DEBUG_UNCOLLECTABLE) when
+                # investigating memory leaks caused by uncollectable
+                # objects.
+                gc.collect()
     return resp
 
 

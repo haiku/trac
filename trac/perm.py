@@ -549,6 +549,14 @@ class PermissionSystem(Component):
             expand_action(a)
         return sorted(expanded_actions)
 
+    @lazy
+    def _policies(self):
+        # The ordered policy list only changes when the environment is
+        # reloaded, which also recreates this component. Cache it to avoid
+        # resolving and sorting the extension points for every permission
+        # check (there can be hundreds per request).
+        return self.policies
+
     def check_permission(self, action, username=None, resource=None,
                          perm=None):
         """Return True if permission to perform action for the given
@@ -558,7 +566,7 @@ class PermissionSystem(Component):
             username = 'anonymous'
         if resource and resource.realm is None:
             resource = None
-        for policy in self.policies:
+        for policy in self._policies:
             decision = policy.check_permission(action, username, resource,
                                                perm)
             if decision is not None:

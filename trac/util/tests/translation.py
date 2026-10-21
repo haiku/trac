@@ -48,6 +48,12 @@ class TranslationsProxyTestCase(unittest.TestCase):
                                          'locale/%s/LC_MESSAGES/messages.mo'
                                          % locale))
 
+    def test_get_available_locales_returns_copy(self):
+        """Modifying the result doesn't alter the cached list."""
+        locales = translation.get_available_locales()
+        locales.append('test_TEST')
+        self.assertNotIn('test_TEST', translation.get_available_locales())
+
     def test_activate(self):
         locales = self._get_available_locales()
         if locales:

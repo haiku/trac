@@ -123,7 +123,12 @@ class WikiModule(Component):
                               name=pagename))
 
         page = WikiPage(self.env, pagename)
-        versioned_page = WikiPage(self.env, pagename, version)
+        if version is None and req.method == 'GET':
+            # Both objects represent the latest version. Share the instance
+            # to avoid loading the same row twice from the database.
+            versioned_page = page
+        else:
+            versioned_page = WikiPage(self.env, pagename, version)
 
         req.perm(versioned_page.resource).require('WIKI_VIEW')
 
@@ -665,7 +670,8 @@ class WikiModule(Component):
                                        False)
                        for each in related]
 
-        latest_page = WikiPage(self.env, page.name)
+        latest_page = page if page.resource.version is None \
+                      else WikiPage(self.env, page.name)
 
         prev_version = next_version = None
         if version:

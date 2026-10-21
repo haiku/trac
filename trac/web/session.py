@@ -155,9 +155,7 @@ class DetachedSession(SessionDict):
 
     def save(self):
         authenticated = int(self.authenticated)
-        now = int(time_now())
-        items = list(self.items())
-        if not authenticated and not self._old and not items:
+        if not authenticated and not self._old and not self:
             # The session for anonymous doesn't have associated data,
             # so there's no need to persist it
             return
@@ -166,6 +164,9 @@ class DetachedSession(SessionDict):
             # commit an empty unit of work. This is the common case for
             # authenticated users on every request.
             return
+
+        now = int(time_now())
+        items = list(self.items())
 
         # We can't do the session management in one big transaction,
         # as the intertwined changes to both the session and

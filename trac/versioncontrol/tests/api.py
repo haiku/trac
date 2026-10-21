@@ -254,6 +254,13 @@ class RepositoryManagerTestCase(unittest.TestCase):
     def setUp(self):
         self.env = EnvironmentStub()
 
+    def test_get_all_repositories_caches_empty_result(self):
+        """An empty repository list is cached rather than re-queried."""
+        repos_manager = RepositoryManager(self.env)
+        repositories = repos_manager.get_all_repositories()
+        self.assertEqual({}, repositories)
+        self.assertIs(repositories, repos_manager.get_all_repositories())
+
     def test_pre_process_request_sync_skipped_for_invalid_connector(self):
         """Repository synchronization is skipped for an invalid connector."""
         repodir = os.path.abspath('/some/path')

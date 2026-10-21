@@ -13,6 +13,7 @@
 
 """Utilities for text translation with gettext."""
 
+from functools import lru_cache
 import pkg_resources
 import re
 
@@ -337,17 +338,23 @@ try:
     def get_translations():
         return translations
 
+    @lru_cache(maxsize=1)
+    def _get_available_locales():
+        return tuple(dirname for dirname
+                     in pkg_resources.resource_listdir('trac', 'locale')
+                     if '.' not in dirname
+                     and pkg_resources.resource_exists(
+                        'trac', 'locale/%s/LC_MESSAGES/messages.mo' % dirname))
+
     def get_available_locales():
         """Return a list of locale identifiers of the locales for which
         translations are available.
+
+        The result is cached for the lifetime of the process, as the
+        installed locale catalogs don't change while Trac is running.
         """
         try:
-            locales = [dirname for dirname
-                       in pkg_resources.resource_listdir('trac', 'locale')
-                       if '.' not in dirname
-                       and pkg_resources.resource_exists(
-                        'trac', 'locale/%s/LC_MESSAGES/messages.mo' % dirname)]
-            return locales
+            return list(_get_available_locales())
         except Exception:
             return []
 

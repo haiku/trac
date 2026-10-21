@@ -644,7 +644,7 @@ class RepositoryManager(Component):
 
     def get_all_repositories(self):
         """Return a dictionary of repository information, indexed by name."""
-        if not self._all_repositories:
+        if self._all_repositories is None:
             all_repositories = {}
             for provider in self.providers:
                 for reponame, info in provider.get_repositories() or []:
